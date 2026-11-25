@@ -1,0 +1,56 @@
+[project]
+name = "people-crm"
+version = "0.1.0"
+description = "Durable, normalized person / interaction / org data foundation for a people-CRM"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "imbue-common",
+    "click>=8.1",
+    "loguru>=0.7",
+    "litellm>=1.88.1",
+    "openai>=2.20.0",
+]
+
+[project.scripts]
+people-crm = "people_crm.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/people_crm"]
+
+[[tool.importlinter.contracts]]
+name = "people_crm layers contract"
+type = "layers"
+layers = [
+    "people_crm.cli",
+    "people_crm.web_view",
+    "people_crm.migration",
+    "people_crm.backfill",
+    "people_crm.sync",
+    "people_crm.ai_judge",
+    "people_crm.google_api",
+    "people_crm.store",
+    "people_crm.identity",
+    "people_crm.metrics",
+    "people_crm.ingest",
+    "people_crm.interfaces",
+    "people_crm.data_types",
+    "people_crm.errors",
+    "people_crm.primitives",
+]
+
+[dependency-groups]
+dev = ["imbue-common[testing]"]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+
+[tool.uv.sources]
+imbue-common = { git = "https://github.com/imbue-ai/mngr", rev = "e6ab2a4966f46511e9a45bb762c47a2aa36858c6", subdirectory = "libs/imbue_common" }
+
+# Makes this directory ty's project; without a [tool.ty] table ty keeps searching upward.
+[tool.ty]

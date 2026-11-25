@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relationships</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;450;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBFAF7; --panel:#FFFFFF; --line:#E8E4DB; --line-strong:#DAD5C9;
+    --ink:#1B1A17; --muted:#6F6B62; --faint:#9A968C;
+    --meet:#0F6E63; --meet-soft:#E4F0ED;      /* meetings = teal */
+    --mail:#3D53B5; --mail-soft:#E7EAF7;       /* email = indigo */
+    --accent:#3D53B5; --warm:#B5471F;
+    --shadow:0 1px 0 rgba(27,26,23,.04), 0 8px 24px -18px rgba(27,26,23,.35);
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; height:100%}
+  body{background:var(--paper); color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1220px; margin:0 auto; padding:34px 28px 90px}
+
+  header.mast{display:flex; align-items:flex-end; justify-content:space-between; gap:24px; padding-bottom:20px; border-bottom:1.5px solid var(--ink)}
+  .mast h1{font-family:'Fraunces',serif; font-weight:500; font-size:36px; letter-spacing:-.5px; margin:0; line-height:1}
+  .mast .sub{color:var(--muted); margin-top:8px; font-size:13px; max-width:56ch}
+  .mast .sub b{color:var(--meet); font-weight:500} .mast .sub i{color:var(--mail); font-style:normal; font-weight:500}
+  .totals{display:flex; gap:24px; text-align:right; flex-shrink:0}
+  .stat .n{font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:24px; line-height:1; letter-spacing:-1px}
+  .stat .l{font-size:10.5px; text-transform:uppercase; letter-spacing:.13em; color:var(--faint); margin-top:6px}
+  .stat.mail .n{color:var(--mail)}
+
+  .controls{display:flex; align-items:center; gap:12px; margin:22px 0 14px; flex-wrap:wrap}
+  .search{position:relative; flex:1; min-width:210px}
+  .search input{width:100%; padding:11px 14px 11px 38px; border:1px solid var(--line-strong); border-radius:var(--r); background:var(--panel); font:inherit; color:var(--ink)}
+  .search input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--mail-soft)}
+  .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; stroke:var(--faint)}
+  .seg{display:inline-flex; border:1px solid var(--line-strong); border-radius:var(--r); overflow:hidden; background:var(--panel)}
+  .seg button{border:none; background:none; padding:9px 13px; cursor:pointer; font:inherit; font-size:13px; color:var(--muted); border-right:1px solid var(--line); display:flex; align-items:center; gap:6px}
+  .seg button:last-child{border-right:none}
+  .seg button:hover{color:var(--ink); background:#FCFBF8}
+  .seg button.on{background:var(--ink); color:var(--paper)}
+  .seg button .ct{font-family:'IBM Plex Mono',monospace; font-size:11px; opacity:.7}
+  .toggle{display:inline-flex; align-items:center; gap:8px; padding:9px 13px; border:1px solid var(--line-strong); border-radius:var(--r); background:var(--panel); cursor:pointer; user-select:none; color:var(--muted); font-size:13px}
+  .toggle.on{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); overflow:hidden}
+  table{width:100%; border-collapse:collapse; table-layout:fixed}
+  col.c-person{width:auto} col.c-ch{width:60px} col.c-m{width:7.5%} col.c-oo{width:5.5%}
+  col.c-em{width:14%} col.c-last{width:11%} col.c-str{width:10.5%} col.c-act{width:70px}
+  .rowact{display:flex; gap:5px; justify-content:flex-end; opacity:0; transition:.12s}
+  tbody tr:hover .rowact{opacity:1}
+  .iconbtn{border:1px solid var(--line-strong); background:var(--panel); border-radius:7px; width:26px; height:26px; display:grid; place-items:center; cursor:pointer; color:var(--muted); padding:0}
+  .iconbtn:hover{border-color:var(--warm); color:var(--warm); background:#F6E7DF}
+  .iconbtn svg{width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8}
+  tr.excluded{opacity:.45}
+  tr.excluded .iconbtn:hover{border-color:var(--meet); color:var(--meet); background:var(--meet-soft)}
+  .company .chip{cursor:pointer; border-bottom:1px dashed transparent}
+  .company .chip:hover{color:var(--warm); border-bottom-color:var(--warm)}
+
+  .filters{margin-top:26px}
+  .filters h2{font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin:0 0 3px}
+  .filters .lede{color:var(--muted); font-size:12.5px; margin:0 0 14px}
+  .frow{display:flex; gap:20px; flex-wrap:wrap}
+  .fcol{flex:1; min-width:280px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .fcol h3{font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin:0 0 12px; font-weight:600; display:flex; justify-content:space-between}
+  .fcol h3 .c{color:var(--faint)}
+  .rule{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line)}
+  .rule:last-child{border-bottom:none}
+  .rule .body{flex:1; min-width:0}
+  .rule .r-main{font-family:'IBM Plex Mono',monospace; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .rule .r-sub{font-size:11px; color:var(--faint)}
+  .seedtag{font-size:9.5px; text-transform:uppercase; letter-spacing:.1em; color:var(--mail); background:var(--mail-soft); border:1px solid #C6CFEE; padding:1px 5px; border-radius:5px}
+  .rule button{border:none; background:none; color:var(--faint); cursor:pointer; font-size:12px; padding:4px 8px; border-radius:6px}
+  .rule button:hover{color:var(--warm); background:#F6E7DF}
+  .cattag{border:1px solid var(--line-strong)!important; border-radius:5px; font-size:10px!important; text-transform:uppercase; letter-spacing:.06em; padding:2px 7px!important; margin-right:4px}
+  .cattag.c-SPAM{color:var(--warm); border-color:#E3B7A6!important; background:#F6E7DF!important}
+  .cattag.c-PERSONAL{color:var(--mail); border-color:#C6CFEE!important; background:var(--mail-soft)!important}
+  .cattag.c-OTHER{color:var(--muted)}
+  .dact-block{padding:12px 22px; border-bottom:1px solid var(--line)}
+  .dact-row{display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap}
+  .dact-row:first-child{margin-top:0}
+  .dact-lbl{font-size:11.5px; color:var(--muted); flex:1; min-width:120px}
+  .dact-row button{border:1px solid var(--line-strong); background:var(--panel); border-radius:7px; padding:5px 11px; cursor:pointer; font:inherit; font-size:12px; color:var(--muted)}
+  .dact-row button.c-SPAM:hover{border-color:var(--warm); color:var(--warm); background:#F6E7DF}
+  .dact-row button.c-PERSONAL:hover{border-color:var(--mail); color:var(--mail); background:var(--mail-soft)}
+  .dact-row button.c-OTHER:hover{border-color:var(--ink); color:var(--ink)}
+  .addf{display:flex; gap:8px; margin-top:12px}
+  .addf input{flex:1; padding:8px 11px; border:1px solid var(--line-strong); border-radius:8px; font:inherit; font-family:'IBM Plex Mono',monospace; font-size:12.5px}
+  .addf input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--mail-soft)}
+  .addf button{padding:8px 14px; border:1px solid var(--ink); background:var(--ink); color:var(--paper); border-radius:8px; cursor:pointer; font:inherit; font-size:12.5px}
+  .fempty{color:var(--faint); font-size:12.5px; font-style:italic; padding:6px 0}
+  .drawer .dact{display:flex; gap:8px; padding:12px 22px; border-bottom:1px solid var(--line)}
+  .drawer .dact button{flex:1; border:1px solid var(--line-strong); background:var(--panel); border-radius:8px; padding:8px; cursor:pointer; font:inherit; font-size:12.5px; color:var(--muted)}
+  .drawer .dact button:hover{border-color:var(--warm); color:var(--warm); background:#F6E7DF}
+  thead th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:600; padding:13px 14px; border-bottom:1px solid var(--line); background:#FCFBF8; cursor:pointer; white-space:nowrap}
+  thead th.num{text-align:right}
+  thead th.sorted{color:var(--ink)}
+  thead th .arrow{color:var(--accent); margin-left:3px}
+  tbody td{padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:middle}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#FCFBF7}
+  .who{display:flex; align-items:center; gap:11px; min-width:0}
+  .avatar{width:30px; height:30px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; font-family:'Fraunces',serif; font-size:13px; color:#fff; font-weight:500}
+  .np{min-width:0}
+  .name{font-weight:500; letter-spacing:-.1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .name .guess{font-size:9.5px; color:var(--faint); border:1px solid var(--line-strong); border-radius:4px; padding:0 4px; margin-left:6px; text-transform:uppercase; letter-spacing:.06em}
+  .sub2{color:var(--faint); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .sub2 .org{color:var(--muted)}
+  td.num{text-align:right; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums}
+  td.num.soft{color:var(--faint)}
+  .chips{display:flex; gap:4px}
+  .ch{width:20px; height:20px; border-radius:6px; display:grid; place-items:center; font-size:11px; font-weight:600; font-family:'IBM Plex Mono',monospace}
+  .ch.m{background:var(--meet-soft); color:var(--meet)} .ch.e{background:var(--mail-soft); color:var(--mail)}
+  .em{font-family:'IBM Plex Mono',monospace; font-size:12.5px}
+  .em .split{color:var(--faint); font-size:11px}
+  .last{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted); text-align:right}
+  .strbar{display:flex; align-items:center; gap:7px; justify-content:flex-end}
+  .strbar .track{width:52px; height:6px; border-radius:4px; background:var(--line); overflow:hidden}
+  .strbar .fill{height:100%; background:linear-gradient(90deg,var(--meet),var(--mail))}
+  .strbar .v{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--faint); width:2.5ch; text-align:right}
+
+  /* org grouping */
+  tr.grp td{background:#F4F1EA; border-bottom:1px solid var(--line-strong); padding:9px 14px}
+  .grp .gh{display:flex; align-items:center; gap:12px}
+  .grp .gname{font-family:'Fraunces',serif; font-size:15px; font-weight:500}
+  .grp .gmeta{font-size:11.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace}
+
+  .empty{padding:26px 14px; color:var(--faint); font-style:italic}
+  footer{margin-top:30px; color:var(--faint); font-size:12px; text-align:center}
+
+  /* drawer */
+  .scrim{position:fixed; inset:0; background:rgba(27,26,23,.30); display:none; z-index:40}
+  .scrim.on{display:block}
+  .drawer{position:fixed; top:0; right:0; height:100%; width:440px; max-width:92vw; background:var(--panel); box-shadow:-20px 0 60px -30px rgba(0,0,0,.5); transform:translateX(100%); transition:transform .2s ease; z-index:50; display:flex; flex-direction:column}
+  .drawer.on{transform:translateX(0)}
+  .dh{padding:22px 22px 18px; border-bottom:1px solid var(--line)}
+  .dh .dname{font-family:'Fraunces',serif; font-size:23px; font-weight:500}
+  .dh .demail{color:var(--faint); font-size:12.5px; margin-top:2px}
+  .dh .demail .copyable{cursor:copy; border-bottom:1px dotted transparent}
+  .dh .demail .copyable:hover{color:var(--mail); border-bottom-color:currentColor}
+  .dh .demail .copied{color:var(--mail); margin-left:6px; font-size:11.5px}
+  .dh .dorg{display:inline-block; margin-top:9px; font-size:11.5px; color:var(--mail); background:var(--mail-soft); border-radius:6px; padding:2px 8px}
+  .dh .x{position:absolute; top:18px; right:18px; cursor:pointer; border:none; background:none; font-size:22px; color:var(--faint)}
+  .dstats{display:flex; gap:20px; padding:14px 22px; border-bottom:1px solid var(--line); background:#FCFBF8}
+  .dstats .n{font-family:'IBM Plex Mono',monospace; font-size:18px} .dstats .l{font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--faint); margin-top:3px}
+  .tl{overflow-y:auto; padding:8px 0}
+  .tl .ev{display:flex; gap:12px; padding:11px 22px; border-bottom:1px solid var(--line)}
+  .tl .mark{width:26px; height:26px; border-radius:7px; flex-shrink:0; display:grid; place-items:center; font-size:12px; font-weight:600; font-family:'IBM Plex Mono',monospace}
+  .tl .mark.m{background:var(--meet-soft); color:var(--meet)} .tl .mark.e{background:var(--mail-soft); color:var(--mail)}
+  .tl .body{flex:1; min-width:0}
+  .tl .t{font-weight:450; font-size:13px}
+  .tl .meta{font-size:11.5px; color:var(--faint); margin-top:2px; font-family:'IBM Plex Mono',monospace; display:flex; gap:8px; align-items:center}
+  .tl .dir{font-size:10px; text-transform:uppercase; letter-spacing:.08em}
+  .tl .dir.sent{color:var(--mail)} .tl .dir.recv{color:var(--muted)}
+  .tl a.src{color:var(--accent); text-decoration:none; font-size:11.5px; align-self:center; white-space:nowrap}
+  .tl a.src:hover{text-decoration:underline}
+  .loading{padding:24px 22px; color:var(--faint)}
+  .mono{font-family:'IBM Plex Mono',monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <h1>Relationships</h1>
+      <div class="sub">Everyone in your orbit across <b>meetings</b> and <i>email</i> — including people you've corresponded with but never sat down with.</div>
+    </div>
+    <div class="totals">
+      <div class="stat"><div class="n" id="t-people">—</div><div class="l">People</div></div>
+      <div class="stat"><div class="n" id="t-met">—</div><div class="l">Met</div></div>
+      <div class="stat mail"><div class="n" id="t-emailonly">—</div><div class="l">Email-only</div></div>
+      <div class="stat"><div class="n" id="t-orgs">—</div><div class="l">Companies</div></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="Search a person, email, or company (try “acme”)…" autocomplete="off">
+    </div>
+    <div class="seg" id="seg">
+      <button data-v="all" class="on">Everyone</button>
+      <button data-v="both">Met &amp; emailed <span class="ct" id="seg-both"></span></button>
+      <button data-v="email">Email-only <span class="ct" id="seg-email"></span></button>
+    </div>
+    <div class="toggle" id="tg-group"><span>Group by company</span></div>
+    <div class="toggle on" id="tg-oneway" title="People who emailed you but never got a reply, and you've never met"><span>Hide unreplied</span></div>
+    <div class="toggle" id="tg-excl"><span>Show excluded</span></div>
+  </div>
+
+  <div class="card">
+    <table>
+      <colgroup><col class="c-person"><col class="c-ch"><col class="c-m"><col class="c-oo"><col class="c-em"><col class="c-last"><col class="c-str"><col class="c-act"></colgroup>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="rows-end"></div>
+  </div>
+
+  <section class="filters">
+    <h2>Filtering</h2>
+    <p class="lede">Anyone matching a rule below is hidden. Nothing is deleted — remove a rule anytime to bring people back. Changes are saved.</p>
+    <div class="frow">
+      <div class="fcol">
+        <h3><span>Excluded companies</span><span class="c" id="fc-d"></span></h3>
+        <div id="f-domains"></div>
+        <div class="addf"><input id="add-domain" type="text" placeholder="add a domain, e.g. newsletter.example.com"><button onclick="addDomain()">Exclude</button></div>
+      </div>
+      <div class="fcol">
+        <h3><span>Excluded people</span><span class="c" id="fc-e"></span></h3>
+        <div id="f-emails"></div>
+        <div class="addf"><input id="add-email" type="text" placeholder="add an email address"><button onclick="addEmail()">Exclude</button></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Built from your calendar and email &middot; <span class="mono" id="asof"></span>. Click anyone to see the full history.</footer>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"></aside>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const DATA=JSON.parse(document.getElementById('data').textContent);
+const P=DATA.people;
+let view='all', query='', groupBy=false, sortKey='strength', sortDir=-1;
+let hideOneWay=true, showExcluded=false;
+let exclDomains=(DATA.filters.domains||[]).map(d=>({...d}));
+let exclEmails=(DATA.filters.emails||[]).map(e=>({...e}));
+
+const COLS=[
+  {k:'name',label:'Person'},
+  {k:'channel',label:'',num:false},
+  {k:'meetings',label:'Mtgs',num:true},
+  {k:'one_on_one',label:'1:1',num:true},
+  {k:'email_total',label:'Email',num:true},
+  {k:'last_contact',label:'Last contact',num:true},
+  {k:'strength',label:'Strength',num:true},
+  {k:'',label:'',num:false},
+];
+
+function isExcluded(p){
+  const addrs=new Set([(p.email||'').toLowerCase(),...(p.emails||[]).map(e=>e.toLowerCase())]);
+  if(exclDomains.some(d=>d.value.toLowerCase()===p.domain.toLowerCase()))return true;
+  if(exclEmails.some(e=>addrs.has(e.value.toLowerCase())))return true;
+  return false;
+}
+// persist a change to the store, then re-sync local state from the response
+function persist(kind, method, value, label, category){
+  return fetch('api/filters/'+kind,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({value,label,category})})
+    .then(r=>r.json()).then(syncFilters).catch(()=>render());
+}
+function persistCategory(kind, value, category){
+  const rt=kind==='domain'?'DOMAIN':'EMAIL';
+  return fetch('api/filters/category',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rule_type:rt,value,category})})
+    .then(r=>r.json()).then(syncFilters).catch(()=>render());
+}
+function syncFilters(f){exclDomains=(f.domains||[]).map(d=>({...d}));exclEmails=(f.emails||[]).map(e=>({...e}));render();}
+const CATS=['SPAM','PERSONAL','OTHER'];
+const CATLABEL={SPAM:'spam',PERSONAL:'personal',OTHER:'other'};
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function initials(p){const s=(p.name||p.email||'?').trim();const parts=s.split(/[\s.@_]+/).filter(Boolean);return ((parts[0]||'?')[0]+(parts[1]?parts[1][0]:'')).toUpperCase();}
+const AV=['#0F6E63','#3D53B5','#345C7A','#8A5A3C','#6B5B95','#7A6A3C','#9A5B4E'];
+function avColor(p){let h=0;for(const c of (p.email||''))h=(h*31+c.charCodeAt(0))>>>0;return AV[h%AV.length];}
+function daysAgo(dstr){if(!dstr)return null;const today=new Date(DATA_TODAY);const d=new Date(dstr);return Math.round((today-d)/86400000);}
+const DATA_TODAY=(P.reduce((m,p)=>p.last_contact&&p.last_contact>m?p.last_contact:m,'2000-01-01'));
+function lastLabel(dstr){if(!dstr)return '—';const days=daysAgo(dstr);if(days<=0)return 'today';if(days<30)return days+'d';if(days<365)return Math.round(days/30)+'mo';return (days/365).toFixed(days<730?0:0)+'yr';}
+const MAXSTR=Math.max(1,...P.map(p=>p.strength));
+
+function inView(p){return view==='all'?true:(view==='email'?p.channel==='email':p.channel==='both');}
+function matchQ(p){if(!query)return true;const q=query.toLowerCase();return (p.name||'').toLowerCase().includes(q)||(p.emails||[]).some(e=>e.toLowerCase().includes(q))||(p.org||'').toLowerCase().includes(q);}
+
+function rowHtml(p){
+  const ch=`<div class="chips">${p.meetings?'<span class="ch m" title="'+p.meetings+' meetings">M</span>':''}${p.email_total?'<span class="ch e" title="'+p.email_total+' emails">@</span>':''}</div>`;
+  const guess=(p.name_source==='INFERRED'||p.name_source==='INFERRED_WEAK')?'<span class="guess">guess</span>':'';
+  const nm=p.name?esc(p.name):esc(p.email.split('@')[0]);
+  const emailCell=p.email_total?`${p.email_total} <span class="split">(${p.email_sent}&#8593;/${p.email_received}&#8595;)</span>`:'<span class="split">—</span>';
+  const strPct=Math.round(100*p.strength/MAXSTR);
+  const ex=isExcluded(p);
+  const hideIcon=ex?'<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':'<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  return `<tr class="${ex?'excluded':''}" onclick="openDrawer('${p.person_id}')">
+    <td><div class="who"><div class="avatar" style="background:${avColor(p)}">${initials(p)}</div>
+      <div class="np"><div class="name">${nm}${guess}</div><div class="sub2 company"><span class="chip" title="Exclude everyone at ${esc(p.org||p.domain)}" onclick="event.stopPropagation();excludeCompany('${esc(p.domain)}','${esc(p.org||p.domain)}')">${esc(p.org||'')}</span></div></div></div></td>
+    <td>${ch}</td>
+    <td class="num ${p.meetings?'':'soft'}">${p.meetings||'·'}</td>
+    <td class="num ${p.one_on_one?'':'soft'}">${p.one_on_one||'·'}</td>
+    <td class="num"><span class="em">${emailCell}</span></td>
+    <td><div class="last">${lastLabel(p.last_contact)}</div></td>
+    <td><div class="strbar"><div class="track"><div class="fill" style="width:${strPct}%"></div></div><span class="v">${Math.round(p.strength)}</span></div></td>
+    <td><div class="rowact"><button class="iconbtn" title="${ex?'Bring back':'Hide this person'}" onclick="event.stopPropagation();togglePerson('${esc(p.email)}')">${hideIcon}</button></div></td>
+  </tr>`;
+}
+
+function visibleSet(){
+  return P.filter(p=>{
+    if(!showExcluded && isExcluded(p))return false;
+    if(hideOneWay && p.one_way)return false;
+    return true;
+  });
+}
+
+function render(){
+  const vis=visibleSet();
+  document.getElementById('t-people').textContent=vis.length;
+  document.getElementById('t-met').textContent=vis.filter(p=>p.meetings).length;
+  document.getElementById('t-emailonly').textContent=vis.filter(p=>p.channel==='email').length;
+  document.getElementById('t-orgs').textContent=new Set(vis.filter(p=>p.org_named).map(p=>p.org)).size;
+  document.getElementById('seg-both').textContent=vis.filter(p=>p.channel==='both').length;
+  document.getElementById('seg-email').textContent=vis.filter(p=>p.channel==='email').length;
+  document.getElementById('asof').textContent='as of '+DATA_TODAY;
+
+  document.getElementById('head').innerHTML=COLS.map(c=>{
+    const s=c.k&&c.k===sortKey;const arr=s?(sortDir<0?'↓':'↑'):'';
+    return `<th class="${c.num?'num':''} ${s?'sorted':''}" onclick="setSort('${c.k}')">${c.label}${s?'<span class=arrow>'+arr+'</span>':''}</th>`;
+  }).join('');
+
+  let rows=vis.filter(p=>inView(p)&&matchQ(p));
+  rows.sort((a,b)=>{let x=a[sortKey],y=b[sortKey];if(sortKey==='name'){x=(a.name||a.email).toLowerCase();y=(b.name||b.email).toLowerCase();}if(x==null)x=sortDir<0?'':'￿';if(y==null)y=sortDir<0?'':'￿';if(x<y)return -1*sortDir;if(x>y)return 1*sortDir;return b.strength-a.strength;});
+
+  const tb=document.getElementById('rows');
+  // Laying out every row at once is what made the page slow to appear, so rows
+  // are drawn in batches: enough to fill the screen now, the rest as you scroll.
+  rowItems=[];
+  if(rows.length===0){rowItems.push(`<tr><td colspan="8" class="empty">No one matches “${esc(query)}”.</td></tr>`);}
+  else if(!groupBy){rows.forEach(p=>rowItems.push(p));}
+  else{
+    const byOrg={};rows.forEach(p=>{(byOrg[p.org||'—']=byOrg[p.org||'—']||[]).push(p);});
+    const orgs=Object.keys(byOrg).sort((a,b)=>byOrg[b].length-byOrg[a].length||a.localeCompare(b));
+    orgs.forEach(org=>{
+      const ppl=byOrg[org];const met=ppl.filter(p=>p.meetings).length;const eo=ppl.filter(p=>p.channel==='email').length;
+      rowItems.push(`<tr class="grp"><td colspan="8"><div class="gh"><span class="gname">${esc(org)}</span><span class="gmeta">${ppl.length} ${ppl.length===1?'person':'people'} · ${met} met · ${eo} email-only</span></div></td></tr>`);
+      ppl.forEach(p=>rowItems.push(p));
+    });
+  }
+  // Keep at least as many rows as were already on screen, so an edit made far
+  // down the list doesn't snap it back to the top.
+  const keep=Math.max(ROW_BATCH,rowsDrawn);
+  tb.innerHTML='';rowsDrawn=0;
+  drawMoreRows(keep);
+  renderFilters();
+  fillRows();
+}
+
+const ROW_BATCH=80;
+let rowItems=[], rowsDrawn=0;
+function drawMoreRows(n){
+  const end=Math.min(rowItems.length,rowsDrawn+n);
+  if(end<=rowsDrawn)return;
+  const html=rowItems.slice(rowsDrawn,end).map(it=>typeof it==='string'?it:rowHtml(it)).join('');
+  document.getElementById('rows').insertAdjacentHTML('beforeend',html);
+  rowsDrawn=end;
+}
+function resetRows(){rowsDrawn=0;}
+// Draw more whenever the end of the drawn rows comes within reach of the screen,
+// including after a jump straight past it (End key, dragging the scrollbar).
+function fillRows(){
+  const end=document.getElementById('rows-end');
+  while(rowsDrawn<rowItems.length && end.getBoundingClientRect().top<innerHeight+1200){
+    drawMoreRows(ROW_BATCH*2);
+  }
+}
+addEventListener('scroll',fillRows,{passive:true,capture:true});
+addEventListener('resize',fillRows);
+
+function renderFilters(){
+  document.getElementById('fc-d').textContent=exclDomains.length;
+  document.getElementById('fc-e').textContent=exclEmails.length;
+  const catTag=(kind,value,cat)=>{cat=cat||'OTHER';return `<button class="cattag c-${cat}" title="Reason: ${CATLABEL[cat]} — click to change" onclick="cycleCat('${kind}','${esc(value)}','${cat}')">${CATLABEL[cat]}</button>`;};
+  const dd=document.getElementById('f-domains');
+  dd.innerHTML=exclDomains.length?exclDomains.map(d=>{
+    const n=P.filter(p=>p.domain.toLowerCase()===d.value.toLowerCase()).length;
+    const seed=d.source==='SEED'?'<span class="seedtag">start</span>':'';
+    return `<div class="rule"><div class="body"><div class="r-main">${esc(d.value)} ${seed}</div><div class="r-sub">${esc(d.label||'')}${d.label?' · ':''}${n} ${n===1?'person':'people'}</div></div>${catTag('domain',d.value,d.category)}<button onclick="rmDomain('${esc(d.value)}')">Remove</button></div>`;
+  }).join(''):'<div class="fempty">No companies excluded.</div>';
+  const ee=document.getElementById('f-emails');
+  ee.innerHTML=exclEmails.length?exclEmails.map(e=>{
+    const p=P.find(x=>(x.email||'').toLowerCase()===e.value.toLowerCase());
+    return `<div class="rule"><div class="body"><div class="r-main">${esc(e.value)}</div><div class="r-sub">${esc(p&&p.name?p.name:(e.label||'individual'))}</div></div>${catTag('email',e.value,e.category)}<button onclick="rmEmail('${esc(e.value)}')">Remove</button></div>`;
+  }).join(''):'<div class="fempty">No individuals excluded. Hover a row and hit ✕ to add one.</div>';
+}
+
+function excludeCompany(domain,label,category){category=category||'OTHER';if(domain&&!exclDomains.some(d=>d.value.toLowerCase()===domain.toLowerCase())){exclDomains.push({value:domain,label:label||'',source:'USER',category});persist('domain','POST',domain,label,category);}render();closeDrawer();}
+function rmDomain(v){exclDomains=exclDomains.filter(d=>d.value.toLowerCase()!==v.toLowerCase());persist('domain','DELETE',v);render();}
+function togglePerson(email,category){const on=exclEmails.some(e=>e.value.toLowerCase()===email.toLowerCase());if(on){exclEmails=exclEmails.filter(e=>e.value.toLowerCase()!==email.toLowerCase());persist('email','DELETE',email);}else{category=category||'OTHER';exclEmails.push({value:email,label:'hidden',category});persist('email','POST',email,'hidden',category);}render();closeDrawer();}
+function rmEmail(v){exclEmails=exclEmails.filter(e=>e.value.toLowerCase()!==v.toLowerCase());persist('email','DELETE',v);render();}
+function cycleCat(kind,value,current){const next=CATS[(CATS.indexOf(current)+1)%CATS.length];persistCategory(kind,value,next);}
+function addDomain(){const el=document.getElementById('add-domain');const v=el.value.trim().replace(/^@/,'');if(v){el.value='';excludeCompany(v,'','OTHER');}}
+function addEmail(){const el=document.getElementById('add-email');const v=el.value.trim();if(v&&v.includes('@')){el.value='';if(!exclEmails.some(e=>e.value.toLowerCase()===v.toLowerCase())){exclEmails.push({value:v,label:'hidden',category:'OTHER'});persist('email','POST',v,'hidden','OTHER');}render();}}
+
+function setSort(k){if(!k)return;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==='name')?1:-1;}resetRows();render();}
+document.getElementById('q').addEventListener('input',e=>{query=e.target.value;resetRows();render();});
+document.getElementById('seg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;view=b.dataset.v;resetRows();document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on',x===b));render();});
+document.getElementById('tg-group').addEventListener('click',function(){groupBy=!groupBy;resetRows();this.classList.toggle('on',groupBy);render();});
+document.getElementById('tg-oneway').addEventListener('click',function(){hideOneWay=!hideOneWay;resetRows();this.classList.toggle('on',hideOneWay);render();});
+document.getElementById('tg-excl').addEventListener('click',function(){showExcluded=!showExcluded;resetRows();this.classList.toggle('on',showExcluded);render();});
+
+const byId=Object.fromEntries(P.map(p=>[p.person_id,p]));
+function openDrawer(pid){
+  const p=byId[pid];const d=document.getElementById('drawer');
+  d.innerHTML=`<div class="dh"><button class="x" onclick="closeDrawer()">×</button>
+    <div class="dname">${esc(p.name||p.email)}</div><div class="demail">${(p.emails||[p.email]).map(e=>`<span class="copyable" title="Click to copy" onclick="copyEmail(this,'${esc(e)}')">${esc(e)}</span>`).join(', ')}</div>
+    ${p.org?`<span class="dorg">${esc(p.org)}</span>`:''}</div>
+    ${isExcluded(p)
+      ? `<div class="dact"><button onclick="togglePerson('${esc(p.email)}')">Bring back into the list</button></div>`
+      : `<div class="dact-block">
+          <div class="dact-row"><span class="dact-lbl">Set aside this person as</span>
+            <button class="c-SPAM" onclick="togglePerson('${esc(p.email)}','SPAM')">Spam</button>
+            <button class="c-PERSONAL" onclick="togglePerson('${esc(p.email)}','PERSONAL')">Personal</button>
+            <button class="c-OTHER" onclick="togglePerson('${esc(p.email)}','OTHER')">Other</button></div>
+          ${p.domain?`<div class="dact-row"><span class="dact-lbl">Exclude all of ${esc(p.org||p.domain)} as</span>
+            <button class="c-SPAM" onclick="excludeCompany('${esc(p.domain)}','${esc(p.org||p.domain)}','SPAM')">Spam</button>
+            <button class="c-PERSONAL" onclick="excludeCompany('${esc(p.domain)}','${esc(p.org||p.domain)}','PERSONAL')">Personal</button>
+            <button class="c-OTHER" onclick="excludeCompany('${esc(p.domain)}','${esc(p.org||p.domain)}','OTHER')">Other</button></div>`:''}
+        </div>`}
+    <div class="dstats">
+      <div><div class="n">${p.meetings||0}</div><div class="l">Meetings</div></div>
+      <div><div class="n">${p.one_on_one||0}</div><div class="l">1:1</div></div>
+      <div><div class="n">${p.email_total||0}</div><div class="l">Emails</div></div>
+      <div><div class="n">${p.hours_focused||0}</div><div class="l">Hours</div></div>
+    </div>
+    <div class="tl" id="tl"><div class="loading">Loading history…</div></div>`;
+  document.getElementById('scrim').classList.add('on');d.classList.add('on');
+  fetch('api/person/'+encodeURIComponent(pid)).then(r=>r.json()).then(det=>{
+    const tl=document.getElementById('tl');
+    if(!det.timeline||!det.timeline.length){tl.innerHTML='<div class="loading">No history found.</div>';return;}
+    tl.innerHTML=det.timeline.map(ev=>{
+      const isM=ev.type==='meeting';
+      const dir=ev.direction==='SENT'?'<span class="dir sent">you sent</span>':(ev.direction==='RECEIVED'?'<span class="dir recv">received</span>':'');
+      const dur=ev.duration_min?`${ev.duration_min} min`:'';
+      return `<div class="ev"><div class="mark ${isM?'m':'e'}">${isM?'M':'@'}</div>
+        <div class="body"><div class="t">${esc(ev.title)}</div>
+          <div class="meta"><span>${esc(ev.date||'')}</span>${dir}${dur?'<span>'+dur+'</span>':''}</div></div>
+        ${ev.link?`<a class="src" href="${esc(ev.link)}" target="_blank">open ↗</a>`:''}</div>`;
+    }).join('');
+  }).catch(()=>{document.getElementById('tl').innerHTML='<div class="loading">Could not load history.</div>';});
+}
+// The app runs framed inside the workspace shell, where the async clipboard API
+// can be refused; fall back to a hidden textarea + execCommand('copy').
+function copyEmail(el,text){
+  const done=()=>{el.parentNode.querySelectorAll('.copied').forEach(n=>n.remove());const t=document.createElement('span');t.className='copied';t.textContent='Copied';el.after(t);setTimeout(()=>t.remove(),1400);};
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}finally{ta.remove();}};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done,fallback);}else{fallback();}
+}
+function closeDrawer(){document.getElementById('scrim').classList.remove('on');document.getElementById('drawer').classList.remove('on');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+render();
+</script>
+</body>
+</html>

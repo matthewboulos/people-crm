@@ -1,0 +1,15 @@
+# The relationship view across meetings and email, over the people-CRM store.
+# It declares no launch path, so the desktop offers the synthesized ``open`` at
+# its root, and its shortcut raises the one window it is for.
+name = "relationships"
+display_name = "Relationships"
+icon = "icon.svg"
+critical = false
+# Keeps running with no window: it prebuilds its summary page in a background
+# thread, and the daily people-crm sync requests it to warm that page.
+stop_when_no_windows = false
+launcher_rank = 51
+
+[default_shortcut]
+launch = "open"
+mode = "focus"

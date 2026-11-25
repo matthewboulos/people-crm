@@ -1,0 +1,7 @@
+title = "People CRM daily sync"
+what = "Pulls the latest contacts and activity into Relationships."
+every = "1d"
+at = "05:00"
+command = ["bash", "-c", "uv run --no-sync --project system/libs/people_crm people-crm sync && curl -s -o /dev/null http://127.0.0.1:8085/"]
+retry_after = "1h"
+timeout = "3h"
